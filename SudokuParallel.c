@@ -26,23 +26,24 @@ int isSafe(int grid[N][N], int row,
 {
   int i;
   int j;
-  bool abort = 0;
+  bool abort = false;
 
     // Check if we find the same num
     // in the similar row , we return 0
-    #  pragma omp parallel num_threads(5) shared(abort)
+    #  pragma omp parallel shared(abort)
     {
       while (!abort)
       {
         for (int x = 0; x <= 8; x++)
-        if (grid[row][x] == num)
-        {
-              abort = 1;
+            if (grid[row][x] == num)
+            {
+              abort = true;
               //return 0;
-        }
+            }
+        break;
+      }
     }
-  }
-    if (abort = 1)
+    if (abort)
     {
       return 0;
     }
@@ -52,18 +53,19 @@ int isSafe(int grid[N][N], int row,
 
     // Check if we find the same num in the
     // similar column , we return 0
-    #  pragma omp parallel num_threads(5) shared(abort)
+    #  pragma omp parallel shared(abort)
     {
-      while(abort = 0)
+      while(!abort)
       {
     for (int x = 0; x <= 8; x++)
         if (grid[x][col] == num)
         {
-            abort = 1;
+            abort = true;
         }
+        break;
     }
   }
-    if (abort = 1)
+    if (abort)
     {
       //#pragma omp critical
       return 0;
@@ -74,20 +76,22 @@ int isSafe(int grid[N][N], int row,
     int startRow = row - row % 3,
                  startCol = col - col % 3;
 
-    #pragma omp parallel num_threads(5) shared(abort) private(i,j)
+    #pragma omp parallel shared(abort) 
+    //private(i,j)
     {
-      while(abort = 0)
+      while(!abort)
       {
         for (i = 0; i < 3; i++)
         //#pragma omp for schedule(static)
-        for (j = 0; j < 3; j++)
-            if (grid[i + startRow][j +startCol] == num)
-            {
-                abort = 1;
-            }
-    }
+            for (j = 0; j < 3; j++)
+                if (grid[i + startRow][j +startCol] == num)
+                {
+                    abort = true;
+                }
+        break;
+        }
   }
-  if ((abort) = 1)
+  if (abort)
   {
     return 0;
   }
@@ -175,16 +179,15 @@ int main(int argc, char* argv[])
                        { 0, 0, 0, 0, 0, 0, 0, 7, 4 },
                        { 0, 0, 5, 2, 0, 6, 3, 0, 0 } };
     start = omp_get_wtime();
-
     if (solveSuduko(grid, 0, 0)==1)
     {
-        elapsed = omp_get_wtime() - start;
         print(grid);
-        printf("elapsed time is %f\n", elapsed);
     }
     else
         printf("No solution exists\n");
 
+    elapsed = omp_get_wtime() - start;
+    printf("elapsed time is %f\n", elapsed);
     return 0;
     // This is code is contributed by Pradeep Mondal P
 }
